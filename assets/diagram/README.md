@@ -1,1 +1,3 @@
-User journey diagrams
+## User Journey
+
+![WakeIQ User Journey](assets/diagram/wakeiq-user-journey.png)
