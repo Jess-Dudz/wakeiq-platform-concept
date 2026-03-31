@@ -45,7 +45,7 @@ While valuable, neither platform supports **decision-making at the moment of pur
 
 ---
 
-## 🌊 Cross-Lake Complexity
+## Cross-Lake Complexity
 
 The market is not isolated to one lake.
 
