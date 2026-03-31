@@ -64,13 +64,11 @@ Yet no platform accounts for this shared ecosystem.
 
 ## User Journey
 
-WakeIQ is built around a continuous decision journey:
+Awareness → Exploration → Decision → Purchase → Ownership → Upgrade Loop
 
-**Awareness → Exploration → Decision → Purchase → Ownership → Upgrade Loop**
+WakeIQ is designed to support users at every stage of this journey.
 
-Each stage introduces friction that WakeIQ is designed to reduce.
-
-(User journey visualization coming soon)
+![WakeIQ User Journey](assets/diagram/wakeiq-user-journey.png)
 
 ---
 
