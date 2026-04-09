@@ -1,107 +1,110 @@
 # LakeLifeIQ
 
-LakeLifeIQ is a decision tool for recreational boating.
+LakeLifeIQ is a live validation-stage boating decision platform that helps users plan the boat, dock setup, upgrades, and next steps around a realistic lake-use scenario.
 
-Most people don’t just need help picking a boat. They need help figuring out what actually makes sense for how they use the water — including their dock setup, accessories, and long-term ownership decisions.
+## Live URL
 
-LakeLifeIQ is designed to answer a simpler, more useful question:
+[https://lakelifeiq.com](https://lakelifeiq.com)
 
-What should I do next?
+## Why I Built This
 
----
+Most recreational boating decisions are framed too narrowly around the boat itself.
 
-## What LakeLifeIQ Does
+In reality, buyers are also trying to understand dock compatibility, lift and cover requirements, comfort upgrades, local dealer and provider options, and whether the full setup makes sense inside a real budget.
 
-Instead of acting like a marketplace or search tool, LakeLifeIQ takes in a few key inputs and returns a structured recommendation.
+I built LakeLifeIQ to make that broader decision easier to understand. The product is meant to reduce guesswork, create better next-step clarity, and test whether a more structured boat-first planning workflow creates value for both users and local marine businesses.
 
-That recommendation may include:
-- Boat options
-- Dock and lift considerations
-- Setup upgrades
-- Tradeoffs between different choices
+## What The Product Does
 
-The goal is clarity, not just options.
+LakeLifeIQ guides users through a short setup flow and returns a structured recommendation based on:
 
----
-
-## How It Works
-
-LakeLifeIQ adapts based on where the user is starting from.
-
-Some users are starting from scratch and need full guidance.
-
-Others already own a boat or part of their setup and want to improve it.
-
-The system is being built to support both.
-
-### Starting from scratch
-- Suggests boat types and models
-- Recommends a compatible setup
-
-### Existing setup
-- Identifies gaps or inefficiencies
-- Recommends upgrades
-- Helps evaluate whether to keep or replace current equipment
-
----
-
-## Current Features
-
-- Intake flow (lake, usage, budget, dock type)
-- Results page with boat recommendations
-- Upgrade suggestions based on usage and dock conditions
-- Expandable explanation for each recommendation
-- Fully working end-to-end flow
-
----
-
-## Product Direction
-
-The current version uses simple filtering logic.
-
-The next phase introduces a scoring model that accounts for:
-- Usage patterns
+- Lake
+- Primary usage
 - Budget
-- Setup constraints
-- User priorities
+- Dock setup
+- Lift and cover needs
+- Automation preferences
+- Comfort and maintenance priorities
 
-Longer term, the goal is to move beyond recommendations and into decision support.
+The output is intentionally broader than a simple boat match. It can include a recommended boat fit, remaining upgrade budget logic, setup-aware lift and cover recommendations, comfort upgrades, and relevant next steps such as exploring a local dealer directory.
 
----
+## Core Features
 
-## Tech Stack
+- Guided setup flow for lake, usage, budget, dock, and upgrade inputs
+- Boat-first recommendation logic on the results page
+- Setup-aware upgrade recommendations for lifts, covers, and comfort systems
+- Dealer directory filtered by lake and setup context
+- Contact flow for support, feedback, and partnership conversations
+- Mobile-friendly customer-facing pages across the planning journey
+- Privacy-safe outbound dealer click tracking through internal redirects
 
-- Next.js (App Router)
+## Technical Highlights
+
+- Next.js App Router
 - React
 - TypeScript
 - Tailwind CSS
+- Resend contact flow
+- Dealer directory with filter-driven navigation
+- Outbound dealer click tracking for analytics and demand measurement
+- Recommendation and filtering logic that ties together boats, upgrades, lake context, and budget constraints
 
----
+## Product / Business Thinking
+
+- Boat-first planning: recommendations start with the boat, then account for what remains in the setup budget
+- Full setup recommendations: dock, lift, cover, comfort, and local provider context are part of the decision, not an afterthought
+- Early launch / validation phase: the product is live, but still focused on learning what users actually find useful
+- Dealer / provider demand measurement: recommendation engagement and outbound click activity help measure local interest without positioning the product as a live paid lead-routing platform
+
+## Launch Status
+
+LakeLifeIQ is live and usable today as a validation-stage product.
+
+The current version is focused on:
+
+- validating whether users want a broader boating planning workflow
+- measuring which recommendation paths are most useful
+- understanding dealer and provider interest by lake and category
+- refining product logic before any future monetized dealer lead-routing workflow becomes active
+
+Paid dealer lead routing is not currently live.
 
 ## Screenshots
 
-### Homepage
-![Homepage](public/screenshots/home.png)
+### Home
+![LakeLifeIQ home](public/screenshots/launch-screeenshots/lakelife-hero.png)
 
-### Intake Flow
-![Start Page](public/screenshots/start.png)
+### Setup Flow
+![LakeLifeIQ setup flow](public/screenshots/launch-screeenshots/lakelife-setup-flow.png)
 
-### Results
-![Results Page](public/screenshots/results.png)
+### Personalized Results
+![LakeLifeIQ personalized results](public/screenshots/launch-screeenshots/lakelife-setup-results.png)
 
----
+### Dealer Directory
+![LakeLifeIQ dealer directory](public/screenshots/launch-screeenshots/lakelife-dealer.png)
 
-## Status
+### Mobile Experience
+![LakeLifeIQ mobile experience](public/screenshots/launch-screeenshots/mobile-screenshot.png)
 
-This is an active build.
+## Future Roadmap
 
-The current version establishes the core flow and structure. The next steps focus on improving the intelligence behind the recommendations.
+- Improve recommendation scoring beyond rules-based filtering
+- Expand inventory and provider coverage by lake and category
+- Add richer results explanations, comparisons, and planning outputs
+- Strengthen analytics around recommendation usefulness and dealer/provider demand
+- Evolve the product into a deeper decision-support workflow once validation is stronger
 
----
+## Local Development
 
-## About
+```bash
+npm install
+npm run dev
+```
 
-This project is part of a broader effort to build decision systems that reflect real-world behavior rather than static inputs.
+Open [http://localhost:3000](http://localhost:3000).
 
-Jessica Dudzinski  
-MS Data Science Candidate | MBA
+For a production check:
+
+```bash
+npm run build
+```
