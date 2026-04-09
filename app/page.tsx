@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
@@ -28,15 +30,18 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
-            <a
-  href="/start"
-  className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-full font-semibold transition inline-block"
->
-  Get Started
-</a>
-            <button className="bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-full font-semibold transition">
+            <Link
+              href="/start"
+              className="inline-block rounded-full bg-cyan-500 px-6 py-3 font-semibold text-white transition hover:bg-cyan-600"
+            >
+              Get Started
+            </Link>
+            <Link
+              href="/dealers"
+              className="inline-block rounded-full bg-white px-6 py-3 font-semibold text-gray-900 transition hover:bg-gray-100"
+            >
               Explore Dealers
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -200,9 +205,12 @@ export default function Home() {
         Get Started
       </button>
 
-      <button className="bg-gray-100 hover:bg-gray-200 text-gray-900 px-8 py-4 rounded-full font-semibold text-lg transition">
+      <Link
+        href="/dealers"
+        className="rounded-full bg-gray-100 px-8 py-4 text-lg font-semibold text-gray-900 transition hover:bg-gray-200"
+      >
         Explore Dealers
-      </button>
+      </Link>
     </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm text-gray-600">

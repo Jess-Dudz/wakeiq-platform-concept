@@ -21,6 +21,13 @@ export default function StartPage() {
   const [usage, setUsage] = useState('Wakeboarding');
   const [budget, setBudget] = useState('60-90');
   const [dockType, setDockType] = useState('Covered slip');
+  const [dockSeatingArea, setDockSeatingArea] = useState('no');
+  const [liftNeed, setLiftNeed] = useState('optional');
+  const [coverNeed, setCoverNeed] = useState('optional');
+  const [liftAutomationPreference, setLiftAutomationPreference] =
+    useState('no-preference');
+  const [coverAutomationPreference, setCoverAutomationPreference] =
+    useState('no-preference');
   const [goal, setGoal] = useState('Buy new');
   const [priorities, setPriorities] = useState<string[]>([
     'Family Friendly',
@@ -48,6 +55,11 @@ export default function StartPage() {
       usage,
       budget,
       dockType,
+      dockSeatingArea,
+      liftNeed,
+      coverNeed,
+      liftAutomationPreference,
+      coverAutomationPreference,
       goal,
       priorities: priorities.join('|'),
     });
@@ -143,6 +155,89 @@ export default function StartPage() {
                 <section className="space-y-3">
                   <div>
                     <h2 className="mb-1 text-xl font-bold text-[#132a72]">
+                      Setup requirements
+                    </h2>
+                    <p className="text-sm text-gray-700">
+                      Let us know which core setup items are required versus
+                      simply nice to have.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-800">
+                        Lift need
+                      </label>
+                      <select
+                        value={liftNeed}
+                        onChange={(e) => setLiftNeed(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 shadow-sm outline-none transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-cyan-500"
+                      >
+                        <option value="optional">Optional</option>
+                        <option value="required">Required</option>
+                        <option value="not-needed">Not needed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-800">
+                        Cover need
+                      </label>
+                      <select
+                        value={coverNeed}
+                        onChange={(e) => setCoverNeed(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 shadow-sm outline-none transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-cyan-500"
+                      >
+                        <option value="optional">Optional</option>
+                        <option value="required">Required</option>
+                        <option value="not-needed">Not needed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-800">
+                        Lift ease-of-use preference
+                      </label>
+                      <p className="mb-2 text-sm leading-relaxed text-gray-600">
+                        Use this to tell us whether you want a simpler,
+                        easier-to-use lift experience, not just a strictly
+                        automatic system.
+                      </p>
+                      <select
+                        value={liftAutomationPreference}
+                        onChange={(e) =>
+                          setLiftAutomationPreference(e.target.value)
+                        }
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 shadow-sm outline-none transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-cyan-500"
+                      >
+                        <option value="no-preference">No preference</option>
+                        <option value="preferred">Preferred</option>
+                        <option value="required">Required</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-800">
+                        Cover automation preference
+                      </label>
+                      <select
+                        value={coverAutomationPreference}
+                        onChange={(e) =>
+                          setCoverAutomationPreference(e.target.value)
+                        }
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 shadow-sm outline-none transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-cyan-500"
+                      >
+                        <option value="no-preference">No preference</option>
+                        <option value="preferred">Preferred</option>
+                        <option value="required">Required</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-3">
+                  <div>
+                    <h2 className="mb-1 text-xl font-bold text-[#132a72]">
                       Core details
                     </h2>
                     <p className="text-sm text-gray-700">
@@ -186,6 +281,12 @@ export default function StartPage() {
                       <label className="mb-2 block text-sm font-semibold text-gray-800">
                         Budget range
                       </label>
+                      <p className="mb-2 text-sm leading-relaxed text-gray-600">
+                        Treat this as your overall lake setup budget, not just
+                        the boat. We use it to balance the boat, dock
+                        improvements, and next-step upgrades as one complete
+                        project.
+                      </p>
                       <select
                         value={budget}
                         onChange={(e) => setBudget(e.target.value)}
@@ -212,6 +313,20 @@ export default function StartPage() {
                         <option>Lift already installed</option>
                         <option>No dock yet</option>
                         <option>Covered slip with seating area</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-800">
+                        Seating / entertaining area
+                      </label>
+                      <select
+                        value={dockSeatingArea}
+                        onChange={(e) => setDockSeatingArea(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 shadow-sm outline-none transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-cyan-500"
+                      >
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
                       </select>
                     </div>
                   </div>

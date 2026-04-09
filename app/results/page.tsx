@@ -1,12 +1,91 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { upgrades, type UpgradeItem } from '../data/upgrades';
 import { boats, type Boat } from '../data/boats';
 
+const budgetBands = ['30-60', '60-90', '90-150', '150+'] as const;
+type BudgetBand = (typeof budgetBands)[number];
+
 function normalizeValue(value: string) {
   return value.trim().toLowerCase();
+}
+
+function isBudgetBand(value: string): value is BudgetBand {
+  return budgetBands.includes(value as BudgetBand);
+}
+
+function getBudgetLabel(budgetBand: string) {
+  return budgetBand === '30-60'
+    ? '$30k–$60k'
+    : budgetBand === '60-90'
+    ? '$60k–$90k'
+    : budgetBand === '90-150'
+    ? '$90k–$150k'
+    : '$150k+';
+}
+
+function formatBudgetBands(bands: string[]) {
+  if (bands.length === 0) return 'No upgrade budget allowance';
+  if (bands.length === 1) return getBudgetLabel(bands[0]);
+
+  return bands.map(getBudgetLabel).join(', ');
+}
+
+function getRemainingUpgradeBudgetBands(
+  selectedTotalBudget: string,
+  recommendedBoatBudget?: string
+) {
+  if (!isBudgetBand(selectedTotalBudget)) return [];
+  if (!recommendedBoatBudget || !isBudgetBand(recommendedBoatBudget)) {
+    return [selectedTotalBudget];
+  }
+
+  const totalIndex = budgetBands.indexOf(selectedTotalBudget);
+  const boatIndex = budgetBands.indexOf(recommendedBoatBudget);
+
+  if (boatIndex > totalIndex) {
+    return [];
+  }
+
+  if (selectedTotalBudget === '30-60') {
+    return [];
+  }
+
+  if (selectedTotalBudget === '60-90') {
+    return ['30-60'];
+  }
+
+  if (selectedTotalBudget === '90-150') {
+    return recommendedBoatBudget === '30-60' ? ['30-60', '60-90'] : ['30-60'];
+  }
+
+  if (
+    recommendedBoatBudget === '30-60' ||
+    recommendedBoatBudget === '60-90'
+  ) {
+    return ['30-60', '60-90', '90-150'];
+  }
+
+  return ['30-60', '60-90', '90-150'];
+}
+
+function normalizeDockType(value: string) {
+  return normalizeValue(value.replace(/\s+with seating area$/i, ''));
+}
+
+function dockTypeHasSeating(value: string) {
+  return /seating area/i.test(value);
+}
+
+function matchesDockType(selectedValue: string, candidateValues?: string[]) {
+  if (!candidateValues || candidateValues.length === 0) return true;
+
+  return candidateValues
+    .map(normalizeDockType)
+    .includes(normalizeDockType(selectedValue));
 }
 
 function matchesOneOf(selectedValues: string[], candidateValues?: string[]) {
@@ -26,16 +105,118 @@ function matchesSingleValue(selectedValue: string, candidateValues?: string[]) {
     .includes(normalizeValue(selectedValue));
 }
 
+function hasSelectedPriority(
+  selectedPriorities: string[],
+  expectedPriority: string
+) {
+  return selectedPriorities.some(
+    (priority) => normalizeValue(priority) === normalizeValue(expectedPriority)
+  );
+}
+
+function matchesPrimaryUsage(boat: Boat, selectedUsage: string) {
+  return boat.usage
+    .map(normalizeValue)
+    .includes(normalizeValue(selectedUsage));
+}
+
+function isLiftUpgrade(item: UpgradeItem) {
+  return Boolean(item.lift);
+}
+
+function isCoverUpgrade(item: UpgradeItem) {
+  return item.category === 'Cover';
+}
+
+function buildDealersHref(lake: string, category: string) {
+  const params = new URLSearchParams();
+  params.set('lake', lake);
+  params.set('category', category);
+  return `/dealers?${params.toString()}`;
+}
+
+function isAutomaticCover(item: UpgradeItem) {
+  return Boolean(
+    item.cover && normalizeValue(item.cover.coverType).includes('automatic')
+  );
+}
+
+function getLiftAutomationRank(item: UpgradeItem) {
+  const automationLevel = item.lift?.automationLevel;
+
+  if (automationLevel === 'automatic') return 2;
+  if (automationLevel === 'assisted') return 1;
+  return 0;
+}
+
+function matchesLiftAutomationPreference(
+  item: UpgradeItem,
+  selectedLiftAutomationPreference: string
+) {
+  if (!isLiftUpgrade(item)) return true;
+  if (selectedLiftAutomationPreference !== 'required') return true;
+  return getLiftAutomationRank(item) >= 1;
+}
+
+function matchesCoverAutomationPreference(
+  item: UpgradeItem,
+  selectedCoverAutomationPreference: string
+) {
+  if (!isCoverUpgrade(item)) return true;
+  if (selectedCoverAutomationPreference !== 'required') return true;
+  return isAutomaticCover(item);
+}
+
+function isUpgradeSuppressedByNeed(
+  item: UpgradeItem,
+  selectedLiftNeed: string,
+  selectedCoverNeed: string
+) {
+  return (
+    (selectedLiftNeed === 'not-needed' && isLiftUpgrade(item)) ||
+    (selectedCoverNeed === 'not-needed' && isCoverUpgrade(item))
+  );
+}
+
+function isRequiredUpgradeType(
+  item: UpgradeItem,
+  selectedLiftNeed: string,
+  selectedLiftAutomationPreference: string,
+  selectedCoverNeed: string,
+  selectedCoverAutomationPreference: string
+) {
+  return (
+    ((selectedLiftNeed === 'required' ||
+      selectedLiftAutomationPreference === 'required') &&
+      isLiftUpgrade(item)) ||
+    ((selectedCoverNeed === 'required' ||
+      selectedCoverAutomationPreference === 'required') &&
+      isCoverUpgrade(item))
+  );
+}
+
 function buildUpgradeReasons(
   item: UpgradeItem,
+  selectedLake: string,
   selectedUsage: string,
   selectedDockType: string,
+  selectedLiftAutomationPreference: string,
   selectedPriorities: string[],
-  selectedBudget: string,
+  remainingUpgradeBudgetBands: string[],
   selectedGoal: string,
-  budgetLabel: string
+  remainingUpgradeBudgetLabel: string,
+  recommendedBoatName: string | null
 ) {
   const reasons: string[] = [];
+
+  if (
+    isLiftUpgrade(item) &&
+    (selectedLiftAutomationPreference === 'preferred' ||
+      selectedLiftAutomationPreference === 'required') &&
+    getLiftAutomationRank(item) >= 1
+  ) {
+    reasons.push('Supports your preference for easier daily lift use');
+  }
 
   if (item.match.priorities?.length) {
     const matchedPriorities = item.match.priorities.filter((priority) =>
@@ -50,6 +231,13 @@ function buildUpgradeReasons(
   }
 
   if (
+    item.match.lake &&
+    item.match.lake.map(normalizeValue).includes(normalizeValue(selectedLake))
+  ) {
+    reasons.push(`Available around your lake: ${selectedLake}`);
+  }
+
+  if (
     item.match.usage &&
     item.match.usage.map(normalizeValue).includes(normalizeValue(selectedUsage))
   ) {
@@ -59,20 +247,21 @@ function buildUpgradeReasons(
   if (
     selectedDockType &&
     item.match.dockType &&
-    item.match.dockType
-      .map(normalizeValue)
-      .includes(normalizeValue(selectedDockType))
+    matchesDockType(selectedDockType, item.match.dockType)
   ) {
     reasons.push(`Works with your dock setup: ${selectedDockType}`);
   }
 
   if (
+    remainingUpgradeBudgetBands.length > 0 &&
     item.match.budget &&
-    item.match.budget
-      .map(normalizeValue)
-      .includes(normalizeValue(selectedBudget))
+    item.match.budget.some((budgetBand) =>
+      remainingUpgradeBudgetBands.includes(budgetBand)
+    )
   ) {
-    reasons.push(`Aligned with your budget range: ${budgetLabel}`);
+    reasons.push(
+      `Fits after ${recommendedBoatName ?? 'your recommended boat'} within the remaining setup budget: ${remainingUpgradeBudgetLabel}`
+    );
   }
 
   if (
@@ -94,59 +283,40 @@ function buildBoatReasons(
 ) {
   const reasons: string[] = [];
 
-  if (boat.usage.includes(selectedUsage as never)) {
-    reasons.push(`Fits your primary usage: ${selectedUsage}`);
-  }
+  reasons.push(`Fits your primary usage: ${selectedUsage}`);
 
   if (
     selectedDockType &&
-    boat.dockCompatibility?.some(
-      (dock) => normalizeValue(dock) === normalizeValue(selectedDockType)
-    )
+    boat.dockCompatibility &&
+    matchesDockType(selectedDockType, boat.dockCompatibility)
   ) {
     reasons.push(`Compatible with your dock setup: ${selectedDockType}`);
   }
 
   if (
-    selectedPriorities.some(
-      (priority) => normalizeValue(priority) === 'convenience'
-    ) &&
+    hasSelectedPriority(selectedPriorities, 'Automation / Convenience') &&
     boat.easyDockAccess
   ) {
     reasons.push('Supports a convenience-focused ownership experience');
   }
 
   if (
-    selectedPriorities.some(
-      (priority) => normalizeValue(priority) === 'low maintenance'
-    ) &&
+    hasSelectedPriority(selectedPriorities, 'Low Maintenance') &&
     boat.lowMaintenance
   ) {
     reasons.push('Matches your low-maintenance preference');
   }
 
-  if (
-    selectedPriorities.some(
-      (priority) => normalizeValue(priority) === 'performance'
-    ) &&
-    boat.performance
-  ) {
+  if (hasSelectedPriority(selectedPriorities, 'Performance') && boat.performance) {
     reasons.push('Strong fit for performance-oriented buyers');
   }
 
-  if (
-    selectedPriorities.some(
-      (priority) => normalizeValue(priority) === 'comfort'
-    ) &&
-    boat.comfort
-  ) {
+  if (hasSelectedPriority(selectedPriorities, 'Comfort') && boat.comfort) {
     reasons.push('Delivers stronger comfort for longer lake days');
   }
 
   if (
-    selectedPriorities.some(
-      (priority) => normalizeValue(priority) === 'family-friendly'
-    ) &&
+    hasSelectedPriority(selectedPriorities, 'Family Friendly') &&
     boat.familyFriendly
   ) {
     reasons.push('Well suited for family-focused lake use');
@@ -179,10 +349,21 @@ export default function ResultsPage() {
   const selectedUsage = searchParams.get('usage') ?? 'Wakeboarding';
   const selectedBudget = searchParams.get('budget') ?? '60-90';
   const selectedDockType = searchParams.get('dockType') ?? '';
+  const selectedDockSeatingArea = searchParams.get('dockSeatingArea');
+  const selectedLiftNeed = searchParams.get('liftNeed') ?? 'optional';
+  const selectedCoverNeed = searchParams.get('coverNeed') ?? 'optional';
+  const selectedLiftAutomationPreference =
+    searchParams.get('liftAutomationPreference') ?? 'no-preference';
+  const selectedCoverAutomationPreference =
+    searchParams.get('coverAutomationPreference') ?? 'no-preference';
   const selectedGoal = searchParams.get('goal') ?? 'Buy new';
   const selectedPriorities = (searchParams.get('priorities') ?? '')
     .split('|')
     .filter(Boolean);
+  const selectedDockHasSeating =
+    selectedDockSeatingArea !== null
+      ? normalizeValue(selectedDockSeatingArea) === 'yes'
+      : dockTypeHasSeating(selectedDockType);
 
   const [openBoatId, setOpenBoatId] = useState<string | null>(null);
   const [showUpgradeDetails, setShowUpgradeDetails] = useState(false);
@@ -199,71 +380,56 @@ export default function ResultsPage() {
   });
 
   const budgetLabel =
-    selectedBudget === '30-60'
-      ? '$30k–$60k'
-      : selectedBudget === '60-90'
-      ? '$60k–$90k'
-      : selectedBudget === '90-150'
-      ? '$90k–$150k'
-      : '$150k+';
+    getBudgetLabel(selectedBudget);
 
   const recommendations = useMemo(() => {
-    return boats
+    // Usage is a hard gate: only boats explicitly tagged for the selected
+    // primary usage can be ranked or shown.
+    const usageQualifiedBoats = boats.filter((boat) =>
+      matchesPrimaryUsage(boat, selectedUsage)
+    );
+
+    return usageQualifiedBoats
       .map((boat) => {
         let score = 0;
 
-        if (boat.usage.includes(selectedUsage as never)) score += 3;
         if (boat.budget === selectedBudget) score += 3;
 
         if (
           selectedDockType &&
-          boat.dockCompatibility?.some(
-            (dock) => normalizeValue(dock) === normalizeValue(selectedDockType)
-          )
+          boat.dockCompatibility &&
+          matchesDockType(selectedDockType, boat.dockCompatibility)
         ) {
           score += 2;
         }
 
         if (
-          selectedPriorities.some(
-            (priority) => normalizeValue(priority) === 'convenience'
-          ) &&
+          hasSelectedPriority(selectedPriorities, 'Automation / Convenience') &&
           boat.easyDockAccess
         ) {
           score += 2;
         }
 
         if (
-          selectedPriorities.some(
-            (priority) => normalizeValue(priority) === 'low maintenance'
-          ) &&
+          hasSelectedPriority(selectedPriorities, 'Low Maintenance') &&
           boat.lowMaintenance
         ) {
           score += 2;
         }
 
         if (
-          selectedPriorities.some(
-            (priority) => normalizeValue(priority) === 'performance'
-          ) &&
+          hasSelectedPriority(selectedPriorities, 'Performance') &&
           boat.performance
         ) {
           score += 2;
         }
 
-        if (
-          selectedPriorities.some(
-            (priority) => normalizeValue(priority) === 'comfort'
-          ) &&
-          boat.comfort
-        ) {
+        if (hasSelectedPriority(selectedPriorities, 'Comfort') && boat.comfort) {
           score += 2;
         }
 
         if (
-          selectedPriorities.some(
-            (priority) => normalizeValue(priority) === 'family-friendly'
-          ) &&
+          hasSelectedPriority(selectedPriorities, 'Family Friendly') &&
           boat.familyFriendly
         ) {
           score += 2;
@@ -289,7 +455,6 @@ export default function ResultsPage() {
           ),
         };
       })
-      .filter((boat) => boat.score > 0)
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return a.model.localeCompare(b.model);
@@ -303,11 +468,40 @@ export default function ResultsPage() {
     budgetLabel,
   ]);
 
+  const topRecommendation = recommendations[0];
+  const alternateRecommendations = recommendations.slice(1, 3);
+  const recommendedBoatName = topRecommendation
+    ? `${topRecommendation.brand} ${topRecommendation.model}`
+    : null;
+  const remainingUpgradeBudgetBands = useMemo(
+    () =>
+      getRemainingUpgradeBudgetBands(selectedBudget, topRecommendation?.budget),
+    [selectedBudget, topRecommendation?.budget]
+  );
+  const remainingUpgradeBudgetLabel = useMemo(
+    () => formatBudgetBands(remainingUpgradeBudgetBands),
+    [remainingUpgradeBudgetBands]
+  );
+
   const recommendedUpgrades = useMemo(() => {
     return upgrades
       .map((item: UpgradeItem) => {
+        const isSuppressedByNeed = isUpgradeSuppressedByNeed(
+          item,
+          selectedLiftNeed,
+          selectedCoverNeed
+        );
+        const matchesLiftAutomation = matchesLiftAutomationPreference(
+          item,
+          selectedLiftAutomationPreference
+        );
+        const matchesCoverAutomation = matchesCoverAutomationPreference(
+          item,
+          selectedCoverAutomationPreference
+        );
+        const matchesLake = matchesSingleValue(selectedLake, item.match.lake);
         const matchesUsage = matchesSingleValue(selectedUsage, item.match.usage);
-        const matchesDockType = matchesSingleValue(
+        const dockTypeMatches = matchesDockType(
           selectedDockType,
           item.match.dockType
         );
@@ -315,25 +509,50 @@ export default function ResultsPage() {
           selectedPriorities,
           item.match.priorities
         );
-        const matchesBudget = matchesSingleValue(
+        const matchesRemainingBudget =
+          remainingUpgradeBudgetBands.length > 0 &&
+          matchesOneOf(remainingUpgradeBudgetBands, item.match.budget);
+        const matchesProjectBudget = matchesSingleValue(
           selectedBudget,
           item.match.budget
         );
         const matchesGoal = matchesSingleValue(selectedGoal, item.match.goal);
+        const matchesSeating =
+          !item.match.requiresSeating || selectedDockHasSeating;
 
         const isMatch =
+          !isSuppressedByNeed &&
+          matchesLiftAutomation &&
+          matchesCoverAutomation &&
+          matchesLake &&
           matchesUsage &&
-          matchesDockType &&
+          dockTypeMatches &&
           matchesPriorities &&
-          matchesBudget &&
-          matchesGoal;
+          matchesRemainingBudget &&
+          matchesGoal &&
+          matchesSeating;
 
         let score = 0;
         if (matchesPriorities) score += 3;
         if (matchesUsage) score += 2;
-        if (matchesDockType) score += 2;
-        if (matchesBudget) score += 2;
+        if (dockTypeMatches) score += 2;
+        if (matchesRemainingBudget) score += 2;
+        if (matchesProjectBudget) score += 1;
         if (matchesGoal) score += 1;
+        if (matchesLake) score += item.match.lake?.length ? 1 : 0;
+        if (matchesSeating) score += item.match.requiresSeating ? 1 : 0;
+        if (
+          selectedLiftAutomationPreference === 'preferred' &&
+          isLiftUpgrade(item)
+        ) {
+          score += getLiftAutomationRank(item);
+        }
+        if (
+          selectedCoverAutomationPreference === 'preferred' &&
+          isAutomaticCover(item)
+        ) {
+          score += 2;
+        }
 
         return {
           ...item,
@@ -341,12 +560,15 @@ export default function ResultsPage() {
           isMatch,
           reasons: buildUpgradeReasons(
             item,
+            selectedLake,
             selectedUsage,
             selectedDockType,
+            selectedLiftAutomationPreference,
             selectedPriorities,
-            selectedBudget,
+            remainingUpgradeBudgetBands,
             selectedGoal,
-            budgetLabel
+            remainingUpgradeBudgetLabel,
+            recommendedBoatName
           ),
         };
       })
@@ -356,12 +578,113 @@ export default function ResultsPage() {
         return a.title.localeCompare(b.title);
       });
   }, [
+    selectedLake,
     selectedUsage,
     selectedDockType,
+    selectedDockHasSeating,
+    selectedLiftNeed,
+    selectedCoverNeed,
+    selectedLiftAutomationPreference,
+    selectedCoverAutomationPreference,
     selectedPriorities,
     selectedBudget,
     selectedGoal,
-    budgetLabel,
+    remainingUpgradeBudgetBands,
+    remainingUpgradeBudgetLabel,
+    recommendedBoatName,
+  ]);
+
+  const requiredOutsideBudgetUpgrades = useMemo(() => {
+    return upgrades
+      .map((item: UpgradeItem) => {
+        const isSuppressedByNeed = isUpgradeSuppressedByNeed(
+          item,
+          selectedLiftNeed,
+          selectedCoverNeed
+        );
+        const isRequiredType = isRequiredUpgradeType(
+          item,
+          selectedLiftNeed,
+          selectedLiftAutomationPreference,
+          selectedCoverNeed,
+          selectedCoverAutomationPreference
+        );
+        const matchesLiftAutomation = matchesLiftAutomationPreference(
+          item,
+          selectedLiftAutomationPreference
+        );
+        const matchesCoverAutomation = matchesCoverAutomationPreference(
+          item,
+          selectedCoverAutomationPreference
+        );
+        const matchesLake = matchesSingleValue(selectedLake, item.match.lake);
+        const matchesUsage = matchesSingleValue(selectedUsage, item.match.usage);
+        const dockTypeMatches = matchesDockType(
+          selectedDockType,
+          item.match.dockType
+        );
+        const matchesPriorities = matchesOneOf(
+          selectedPriorities,
+          item.match.priorities
+        );
+        const matchesRemainingBudget =
+          remainingUpgradeBudgetBands.length > 0 &&
+          matchesOneOf(remainingUpgradeBudgetBands, item.match.budget);
+        const matchesGoal = matchesSingleValue(selectedGoal, item.match.goal);
+        const matchesSeating =
+          !item.match.requiresSeating || selectedDockHasSeating;
+
+        const shouldSurface =
+          !isSuppressedByNeed &&
+          isRequiredType &&
+          matchesLiftAutomation &&
+          matchesCoverAutomation &&
+          matchesLake &&
+          matchesUsage &&
+          dockTypeMatches &&
+          matchesPriorities &&
+          matchesGoal &&
+          matchesSeating &&
+          !matchesRemainingBudget;
+
+        const reasons = [
+          isLiftUpgrade(item)
+            ? selectedLiftAutomationPreference === 'required'
+              ? 'You marked an easier-to-use lift setup as required for this setup'
+              : 'You marked a lift as required for this setup'
+            : selectedCoverAutomationPreference === 'required'
+            ? 'You marked an automatic cover as required for this setup'
+            : 'You marked a cover as required for this setup',
+          `This option likely needs to be budgeted separately from ${recommendedBoatName ?? 'your recommended boat'}`,
+        ];
+
+        if (item.match.lake?.length) {
+          reasons.push(`Available around your lake: ${selectedLake}`);
+        } else if (item.match.dockType?.length && selectedDockType) {
+          reasons.push(`Works with your dock setup: ${selectedDockType}`);
+        }
+
+        return {
+          ...item,
+          shouldSurface,
+          reasons,
+        };
+      })
+      .filter((item) => item.shouldSurface)
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [
+    selectedLake,
+    selectedUsage,
+    selectedDockType,
+    selectedDockHasSeating,
+    selectedLiftNeed,
+    selectedCoverNeed,
+    selectedLiftAutomationPreference,
+    selectedCoverAutomationPreference,
+    selectedPriorities,
+    selectedGoal,
+    remainingUpgradeBudgetBands,
+    recommendedBoatName,
   ]);
 
   const groupedUpgrades = useMemo(() => {
@@ -393,8 +716,52 @@ export default function ResultsPage() {
     });
   }, [recommendedUpgrades]);
 
-  const topRecommendation = recommendations[0];
-  const alternateRecommendations = recommendations.slice(1, 3);
+  const dealersCategory = useMemo(() => {
+    const allUpgradeCandidates = [
+      ...recommendedUpgrades,
+      ...requiredOutsideBudgetUpgrades,
+    ];
+
+    const hasLiftOptions = allUpgradeCandidates.some((item) => isLiftUpgrade(item));
+    const hasCoverOptions = allUpgradeCandidates.some((item) => isCoverUpgrade(item));
+    const hasComfortOptions = allUpgradeCandidates.some(
+      (item) => item.category === 'Comfort'
+    );
+
+    if (
+      (selectedLiftNeed === 'required' ||
+        selectedLiftAutomationPreference === 'required') &&
+      hasLiftOptions
+    ) {
+      return 'lifts';
+    }
+
+    if (
+      (selectedCoverNeed === 'required' ||
+        selectedCoverAutomationPreference === 'required') &&
+      hasCoverOptions
+    ) {
+      return 'covers';
+    }
+
+    if (selectedDockHasSeating && hasComfortOptions) {
+      return 'comfort';
+    }
+
+    return 'boats';
+  }, [
+    recommendedUpgrades,
+    requiredOutsideBudgetUpgrades,
+    selectedLiftNeed,
+    selectedLiftAutomationPreference,
+    selectedCoverNeed,
+    selectedCoverAutomationPreference,
+    selectedDockHasSeating,
+  ]);
+  const dealersHref = useMemo(
+    () => buildDealersHref(selectedLake, dealersCategory),
+    [selectedLake, dealersCategory]
+  );
 
   const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -621,12 +988,12 @@ export default function ResultsPage() {
                       </div>
 
                       <div className="flex flex-wrap gap-3">
-                        <button
-                          type="button"
+                        <Link
+                          href={dealersHref}
                           className="rounded-full bg-cyan-500 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-cyan-600 hover:shadow-lg active:scale-[0.98]"
                         >
                           Find Dealers Near You
-                        </button>
+                        </Link>
 
                         <button
                           type="button"
@@ -738,6 +1105,15 @@ export default function ResultsPage() {
                         </button>
                       </div>
 
+                      <p className="mb-6 text-sm leading-relaxed text-gray-600">
+                        These upgrades are filtered to fit after{' '}
+                        <span className="font-semibold text-[#132a72]">
+                          {recommendedBoatName ?? 'your recommended boat'}
+                        </span>{' '}
+                        within your total project budget. Remaining upgrade
+                        allowance: {remainingUpgradeBudgetLabel}.
+                      </p>
+
                       {recommendedUpgrades.length > 0 ? (
                         <div className="space-y-6">
                           {groupedUpgrades.map(([category, items]) => (
@@ -808,8 +1184,67 @@ export default function ResultsPage() {
                         </div>
                       ) : (
                         <div className="rounded-[20px] border border-[#d7e3ee] bg-[#f8fbfd] p-5 text-gray-600">
-                          No specific upgrades were identified for this setup
-                          yet.
+                          No setup upgrades fit comfortably after your
+                          recommended boat within the remaining project budget.
+                        </div>
+                      )}
+
+                      {requiredOutsideBudgetUpgrades.length > 0 && (
+                        <div className="mt-6 rounded-[20px] border border-amber-200 bg-amber-50 p-5">
+                          <div className="mb-4">
+                            <h4 className="text-lg font-bold text-amber-900">
+                              Required but likely outside your current budget
+                            </h4>
+                            <p className="mt-1 text-sm leading-relaxed text-amber-900/80">
+                              You marked these items as required, so we are
+                              still surfacing them even though they likely need
+                              to be budgeted separately from the recommended
+                              boat-first setup.
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {requiredOutsideBudgetUpgrades.map((item) => (
+                              <div
+                                key={item.id}
+                                className="rounded-[20px] border border-amber-200 bg-white p-5"
+                              >
+                                <div className="mb-2 flex items-center justify-between gap-3">
+                                  <p className="text-sm font-semibold text-amber-700">
+                                    {item.category}
+                                  </p>
+                                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                                    Required
+                                  </span>
+                                </div>
+
+                                <h4 className="mb-2 text-xl font-bold text-[#132a72]">
+                                  {item.title}
+                                </h4>
+
+                                <p className="mb-4 text-gray-600">
+                                  {item.description}
+                                </p>
+
+                                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-800">
+                                    Why this is still surfaced
+                                  </p>
+                                  <ul className="space-y-1 text-sm text-amber-900">
+                                    {item.reasons.map((reason) => (
+                                      <li
+                                        key={reason}
+                                        className="flex items-start gap-2"
+                                      >
+                                        <span className="mt-0.5">•</span>
+                                        <span>{reason}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
@@ -827,7 +1262,8 @@ export default function ResultsPage() {
                               lake
                             </li>
                             <li>
-                              • Reflects your budget, priorities, and dock setup
+                              • Reflects your remaining setup budget,
+                              priorities, and dock setup
                             </li>
                             <li>
                               • Creates a more complete setup instead of just a
@@ -871,12 +1307,28 @@ export default function ResultsPage() {
               ) : (
                 <section className="rounded-[28px] bg-white p-8 shadow-[0_18px_50px_rgba(0,0,0,0.12)]">
                   <h2 className="mb-3 text-2xl font-bold text-[#132a72]">
-                    No exact matches found
+                    {selectedUsage === 'Fishing'
+                      ? 'Fishing inventory is still expanding'
+                      : 'No exact matches found'}
                   </h2>
                   <p className="text-gray-600">
-                    Try adjusting your usage, budget, or dock type to broaden
-                    the recommendation range.
+                    {selectedUsage === 'Fishing'
+                      ? 'We do not have enough fishing-specific boat inventory in LakeLifeIQ yet to return a confident recommendation for that category.'
+                      : 'Try adjusting your usage, budget, or dock type to broaden the recommendation range.'}
                   </p>
+                  {selectedUsage === 'Fishing' && (
+                    <p className="mt-3 text-gray-600">
+                      Fishing coverage is being expanded, so for now this
+                      result is intentionally withheld instead of showing a wake
+                      or surf boat that is not explicitly tagged for fishing.
+                    </p>
+                  )}
+                  {selectedUsage === 'Fishing' && (
+                    <p className="mt-3 text-gray-600">
+                      You can try another primary usage for now, or check back
+                      once fishing inventory has been added.
+                    </p>
+                  )}
                 </section>
               )}
             </div>
