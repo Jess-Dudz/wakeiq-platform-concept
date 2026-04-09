@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { upgrades } from '../data/upgrades';
+import { buildOutboundHref } from '@/lib/outbound-clicks';
 
 type Lake = 'Lake of the Ozarks' | 'Table Rock Lake';
 type CategoryFilter = 'all' | 'boats' | 'covers' | 'lifts' | 'comfort';
@@ -18,6 +19,7 @@ type ProviderCard = {
   systems: string[];
   serviceTypes: string[];
   note: string;
+  url?: string;
 };
 
 const boatDealers: DealerCard[] = [
@@ -125,6 +127,7 @@ function buildProviderCards(
         ...existing.serviceTypes,
         serviceType,
       ]);
+      existing.url = existing.url ?? details.websiteUrl;
       return;
     }
 
@@ -134,6 +137,7 @@ function buildProviderCards(
       systems: toUniqueList([systemBrand]),
       serviceTypes: toUniqueList([serviceType]),
       note: item.description,
+      url: details.websiteUrl,
     });
   });
 
@@ -187,6 +191,7 @@ function ServiceCard({
   lakes,
   systems,
   serviceTypes,
+  outboundHref,
 }: {
   title: string;
   eyebrow: string;
@@ -194,9 +199,10 @@ function ServiceCard({
   lakes: Lake[];
   systems: string[];
   serviceTypes: string[];
+  outboundHref?: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[#dbe6ef] bg-white p-6 shadow-[0_16px_40px_rgba(8,34,87,0.08)]">
+    <div className="flex h-full flex-col rounded-[24px] border border-[#dbe6ef] bg-white p-6 shadow-[0_16px_40px_rgba(8,34,87,0.08)]">
       <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
         {eyebrow}
       </p>
@@ -235,8 +241,33 @@ function ServiceCard({
           </p>
         </div>
       )}
+
+      {/* Only show provider website buttons when a verified URL exists in the source data. */}
+      {outboundHref ? (
+        <div className="mt-auto pt-6">
+          <a
+            href={outboundHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
+          >
+            Visit Website
+          </a>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function formatProviderLakeMetadata(
+  lakes: Lake[],
+  selectedLake: Lake | 'all'
+): string {
+  if (selectedLake !== 'all') {
+    return selectedLake;
+  }
+
+  return lakes.length > 0 ? lakes.join(' / ') : 'Unknown';
 }
 
 export default async function DealersPage({
@@ -288,6 +319,7 @@ export default async function DealersPage({
       : selectedCategory === 'comfort'
       ? 'Cooling / Comfort'
       : 'All categories';
+  const sourcePage = buildFilterHref(selectedLake, selectedCategory);
 
   return (
     <main className="min-h-screen bg-[#eef4f8] text-gray-900">
@@ -337,16 +369,13 @@ export default async function DealersPage({
           </div>
 
           <aside className="rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.16)] backdrop-blur-sm">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
                   Upcoming Shows
                 </p>
                 <h2 className="mt-2 text-2xl font-bold">Regional watchlist</h2>
               </div>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
-                Simple for now
-              </span>
             </div>
 
             <div className="space-y-4">
@@ -478,40 +507,58 @@ export default async function DealersPage({
 
                 {filteredBoatDealers.length > 0 ? (
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                    {filteredBoatDealers.map((dealer) => (
-                      <a
-                        key={`${dealer.name}-${dealer.lake}`}
-                        href={dealer.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-[24px] border border-[#dbe6ef] bg-white p-6 shadow-[0_16px_40px_rgba(8,34,87,0.08)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(8,34,87,0.12)]"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-                            {dealer.lake}
-                          </p>
-                          <span className="rounded-full bg-[#eef7fb] px-3 py-1 text-xs font-semibold text-[#132a72]">
-                            Boat Dealer
-                          </span>
-                        </div>
-                        <h3 className="mt-3 text-2xl font-bold text-[#132a72]">
-                          {dealer.name}
-                        </h3>
-                        <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                          {dealer.note}
-                        </p>
-                        <div className="mt-5 flex flex-wrap gap-2">
-                          {dealer.specialties.map((specialty) => (
-                            <span
-                              key={specialty}
-                              className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
-                            >
-                              {specialty}
+                    {filteredBoatDealers.map((dealer) => {
+                      const outboundHref = buildOutboundHref({
+                        destinationType: 'dealer',
+                        name: dealer.name,
+                        lake: dealer.lake,
+                        category: 'boats',
+                        sourcePage,
+                        destinationUrl: dealer.url,
+                      });
+
+                      return (
+                        <div
+                          key={`${dealer.name}-${dealer.lake}`}
+                          className="flex h-full flex-col rounded-[24px] border border-[#dbe6ef] bg-white p-6 shadow-[0_16px_40px_rgba(8,34,87,0.08)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(8,34,87,0.12)]"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                              {dealer.lake}
+                            </p>
+                            <span className="rounded-full bg-[#eef7fb] px-3 py-1 text-xs font-semibold text-[#132a72]">
+                              Boat Dealer
                             </span>
-                          ))}
+                          </div>
+                          <h3 className="mt-3 text-2xl font-bold text-[#132a72]">
+                            {dealer.name}
+                          </h3>
+                          <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                            {dealer.note}
+                          </p>
+                          <div className="mt-5 flex flex-wrap gap-2">
+                            {dealer.specialties.map((specialty) => (
+                              <span
+                                key={specialty}
+                                className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
+                              >
+                                {specialty}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="mt-auto pt-6">
+                            <a
+                              href={outboundHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                            >
+                              Visit Website
+                            </a>
+                          </div>
                         </div>
-                      </a>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <EmptyState label="boat dealers" />
@@ -533,6 +580,7 @@ export default async function DealersPage({
                 {coverProviders.length > 0 ? (
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                     {coverProviders.map((provider) => (
+                      // Provider outbound clicks stay privacy-safe and only use known website URLs.
                       <ServiceCard
                         key={provider.name}
                         title={provider.name}
@@ -541,6 +589,21 @@ export default async function DealersPage({
                         lakes={provider.lakes}
                         systems={provider.systems}
                         serviceTypes={provider.serviceTypes}
+                        outboundHref={
+                          provider.url
+                            ? buildOutboundHref({
+                                destinationType: 'provider',
+                                name: provider.name,
+                                lake: formatProviderLakeMetadata(
+                                  provider.lakes,
+                                  selectedLake
+                                ),
+                                category: 'covers',
+                                sourcePage,
+                                destinationUrl: provider.url,
+                              })
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -572,6 +635,21 @@ export default async function DealersPage({
                         lakes={provider.lakes}
                         systems={provider.systems}
                         serviceTypes={provider.serviceTypes}
+                        outboundHref={
+                          provider.url
+                            ? buildOutboundHref({
+                                destinationType: 'provider',
+                                name: provider.name,
+                                lake: formatProviderLakeMetadata(
+                                  provider.lakes,
+                                  selectedLake
+                                ),
+                                category: 'lifts',
+                                sourcePage,
+                                destinationUrl: provider.url,
+                              })
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -603,6 +681,21 @@ export default async function DealersPage({
                         lakes={provider.lakes}
                         systems={provider.systems}
                         serviceTypes={provider.serviceTypes}
+                        outboundHref={
+                          provider.url
+                            ? buildOutboundHref({
+                                destinationType: 'provider',
+                                name: provider.name,
+                                lake: formatProviderLakeMetadata(
+                                  provider.lakes,
+                                  selectedLake
+                                ),
+                                category: 'comfort',
+                                sourcePage,
+                                destinationUrl: provider.url,
+                              })
+                            : undefined
+                        }
                       />
                     ))}
                   </div>

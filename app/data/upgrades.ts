@@ -12,6 +12,7 @@ export type CoverDetails = {
   coverType: string;
   systemBrand?: string;
   localProvider?: string;
+  websiteUrl?: string;
   lakeCoverage?: ('Lake of the Ozarks' | 'Table Rock Lake')[];
 };
 
@@ -19,6 +20,7 @@ export type LiftDetails = {
   liftType: string;
   systemBrand?: string;
   localProvider?: string;
+  websiteUrl?: string;
   lakeCoverage?: ('Lake of the Ozarks' | 'Table Rock Lake')[];
   sizingNotes?: string[];
   automationLevel?: 'manual' | 'assisted' | 'automatic';
@@ -28,6 +30,7 @@ export type ComfortDetails = {
   comfortType: string;
   systemBrand?: string;
   localProvider?: string;
+  websiteUrl?: string;
   lakeCoverage?: ('Lake of the Ozarks' | 'Table Rock Lake')[];
 };
 

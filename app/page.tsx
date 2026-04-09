@@ -26,7 +26,7 @@ export default function Home() {
               href="/start"
               className="inline-block rounded-full bg-cyan-500 px-6 py-3 font-semibold text-white transition hover:bg-cyan-600"
             >
-              Get Started
+              Start Your Plan
             </Link>
             <Link
               href="/dealers"
