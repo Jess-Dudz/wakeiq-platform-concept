@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -37,9 +38,16 @@ export default function RootLayout({
             <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className="text-lg font-bold tracking-tight text-[#132a72] transition hover:text-cyan-700"
+                className="flex items-center rounded-full px-1 py-1 transition hover:opacity-90"
               >
-                LakeLifeIQ
+                <Image
+                  src="/logo-color.png"
+                  alt="LakeLifeIQ"
+                  width={205}
+                  height={50}
+                  className="h-10 w-auto md:h-11"
+                  priority
+                />
               </Link>
 
               <nav className="hidden items-center gap-5 md:flex">
@@ -61,6 +69,12 @@ export default function RootLayout({
                 >
                   Dealers
                 </Link>
+                <Link
+                  href="/about"
+                  className="text-sm font-semibold text-gray-700 transition hover:text-[#132a72]"
+                >
+                  About
+                </Link>
               </nav>
             </div>
 
@@ -78,6 +92,12 @@ export default function RootLayout({
                 >
                   Dealers
                 </Link>
+                <Link
+                  href="/about"
+                  className="text-xs font-semibold text-gray-700 transition hover:text-[#132a72]"
+                >
+                  About
+                </Link>
               </nav>
 
               <Link
@@ -91,6 +111,66 @@ export default function RootLayout({
         </header>
 
         <main className="flex-1">{children}</main>
+
+        <footer className="border-t border-white/10 bg-[#0c214f] text-white">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-12 md:flex-row md:items-end md:justify-between md:px-6">
+            <div className="max-w-lg">
+              <Link
+                href="/"
+                className="inline-flex items-center transition hover:opacity-90"
+              >
+                <Image
+                  src="/logo-white.png"
+                  alt="LakeLifeIQ"
+                  width={185}
+                  height={44}
+                  className="h-10 w-auto"
+                />
+              </Link>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">
+                Smarter boating starts with a smarter setup. LakeLifeIQ helps
+                connect the boat, the dock, the providers, and the real budget
+                behind a confident lake plan.
+              </p>
+              <p className="mt-3 text-sm font-medium text-cyan-100/90">
+                For users, LakeLifeIQ will always be free to use.
+              </p>
+              <p className="mt-3 text-sm text-white/70">
+                Contact:{" "}
+                <a
+                  href="mailto:contact@lakelifeiq.com"
+                  className="font-semibold text-cyan-100 transition hover:text-white"
+                >
+                  contact@lakelifeiq.com
+                </a>
+              </p>
+              <p className="mt-4 text-xs uppercase tracking-[0.14em] text-white/45">
+                © 2026 LakeLifeIQ. All rights reserved.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 text-sm font-semibold md:items-end md:self-center md:text-right">
+              <Link
+                href="/about"
+                className="text-white/80 transition hover:text-white"
+              >
+                About
+              </Link>
+              <Link
+                href="/contact"
+                className="text-white/80 transition hover:text-white"
+              >
+                Contact
+              </Link>
+              <Link
+                href="/privacy-policy"
+                className="text-white/80 transition hover:text-white"
+              >
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+        </footer>
       </body>
     </html>
   );

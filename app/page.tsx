@@ -4,14 +4,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       <section className="relative h-screen flex items-center justify-center text-center overflow-hidden">
-  <div className="absolute top-10 left-10 z-20">
-  <img
-    src="/logo-white.png"
-    alt="LakeLifeIQ"
-    className="h-20 md:h-24 w-auto drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
-  />
-</div>
-
   <img
     src="/hero.png"
     alt="Boating"
@@ -114,11 +106,11 @@ export default function Home() {
   See it in action
 </p>
       <h2 className="text-3xl md:text-5xl font-bold text-blue-900 max-w-4xl mx-auto leading-[1.1] tracking-tight">
-  LakeLifeIQ doesn’t just recommend a boat
-  <span className="block mt-2">it recommends your entire setup.</span>
+  LakeLifeIQ doesn’t stop at the boat
+  <span className="block mt-2">it maps the real setup around it.</span>
 </h2>
       <p className="text-cyan-700 font-semibold">
-        A complete setup recommendation based on how you actually use the lake.
+        Local providers, lake-specific logic, and a budget-aware plan built around the boat first.
       </p>
     </div>
 
@@ -126,11 +118,14 @@ export default function Home() {
       <div className="bg-white rounded-2xl shadow-xl p-8">
         <h3 className="text-[#132a72] font-bold text-2xl mb-6">Input</h3>
         <div className="space-y-3 text-lg text-gray-800">
-          <p><span className="font-bold">Lake:</span> Lake of the Ozarks</p>
-          <p><span className="font-bold">Usage:</span> Wakeboarding + cruising</p>
-          <p><span className="font-bold">Dock:</span> Covered slip with seating area</p>
-          <p><span className="font-bold">Budget:</span> $60k–$90k</p>
-          <p><span className="font-bold">Priorities:</span> Low maintenance + family-friendly</p>
+          <p><span className="font-bold">Lake:</span> Table Rock Lake</p>
+          <p><span className="font-bold">Usage:</span> Family recreation</p>
+          <p><span className="font-bold">Dock:</span> Covered slip</p>
+          <p><span className="font-bold">Seating area:</span> Yes</p>
+          <p><span className="font-bold">Total project budget:</span> $150k+</p>
+          <p><span className="font-bold">Cover need:</span> Required</p>
+          <p><span className="font-bold">Cover automation:</span> Required</p>
+          <p><span className="font-bold">Priorities:</span> Comfort + low maintenance</p>
         </div>
       </div>
 
@@ -141,47 +136,46 @@ export default function Home() {
 </div>
 
       <div className="bg-white rounded-2xl shadow-xl p-8">
-        <h3 className="text-[#132a72] font-bold text-2xl mb-6">Recommendation</h3>
+        <h3 className="text-[#132a72] font-bold text-2xl mb-6">LakeLifeIQ Plan</h3>
 
         <div className="space-y-5 text-gray-800">
           <div>
-            <h4 className="font-bold text-lg text-black">Boat</h4>
+            <h4 className="font-bold text-lg text-black">Boat-first recommendation</h4>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Wake boat (23ft)</li>
-              <li>Ballast system, tower speakers</li>
+              <li>Top boat is selected first inside the total setup budget</li>
+              <li>Upgrades are filtered against the remaining budget after the boat</li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg text-black">Lift</h4>
+            <h4 className="font-bold text-lg text-black">Provider-based lift guidance</h4>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>6,500 lb boat lift</li>
-              <li>Fast lift motors for high-traffic water</li>
+              <li>Table Rock lift providers surface only when the dock setup calls for them</li>
+              <li>Easier daily-use lift options can rank higher when that preference matters</li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg text-black">Cover</h4>
+            <h4 className="font-bold text-lg text-black">Provider-based covers</h4>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Touchless boat cover</li>
-              <li>Lower maintenance and faster daily use than spider systems</li>
+              <li>Lake-specific automatic cover providers are recommended ahead of generic cover tiers</li>
+              <li>If an automatic cover is required, manual options are held back from the main set</li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg text-black">Dock setup</h4>
+            <h4 className="font-bold text-lg text-black">Seating-aware comfort logic</h4>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Lift placement optimized for slip width</li>
-              <li>Clearance verified for tower height</li>
-              <li>Misting system for seating area</li>
-              <li>Shade + cooling for summer heat</li>
+              <li>Misting and dock-comfort providers only show when the setup actually includes a seating area</li>
+              <li>Comfort recommendations are tied to lake and dock context, not broad boating usage</li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg text-black">Dealers</h4>
+            <h4 className="font-bold text-lg text-black">Budget clarity and required items</h4>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>3 nearby dealers with matching inventory and service availability</li>
+              <li>Required lift or cover items can still be surfaced even if they likely sit outside the remaining upgrade budget</li>
+              <li>The result is a realistic plan, not a stack of individually in-budget guesses</li>
             </ul>
           </div>
         </div>

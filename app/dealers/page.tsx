@@ -239,16 +239,19 @@ function ServiceCard({
   );
 }
 
-export default function DealersPage({
+export default async function DealersPage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     lake?: string | string[];
     category?: string | string[];
-  };
+  }>;
 }) {
-  const selectedLake = normalizeLakeFilter(searchParams?.lake);
-  const selectedCategory = normalizeCategoryFilter(searchParams?.category);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const selectedLake = normalizeLakeFilter(resolvedSearchParams?.lake);
+  const selectedCategory = normalizeCategoryFilter(
+    resolvedSearchParams?.category
+  );
 
   const filteredBoatDealers = boatDealers.filter(
     (dealer) => selectedLake === 'all' || dealer.lake === selectedLake
@@ -273,8 +276,8 @@ export default function DealersPage({
   const showComfort =
     selectedCategory === 'all' || selectedCategory === 'comfort';
   const hasSetupContext =
-    (searchParams?.lake && selectedLake !== 'all') ||
-    (searchParams?.category && selectedCategory !== 'all');
+    (resolvedSearchParams?.lake && selectedLake !== 'all') ||
+    (resolvedSearchParams?.category && selectedCategory !== 'all');
   const selectedCategoryLabel =
     selectedCategory === 'boats'
       ? 'Boat Dealers'
